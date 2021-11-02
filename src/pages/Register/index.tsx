@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { InputForm } from '../../components/Forms/InputForm';
 import { Keyboard, Modal, TouchableWithoutFeedback, Alert } from 'react-native';
 import { Button } from '../../components/Forms/Button';
@@ -10,6 +10,7 @@ import { CategorySelect } from '../CategorySelect'
 import { useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export interface DataListProps extends TransactionCardProps {
@@ -49,7 +50,7 @@ export function Register() {
 
   const { control, handleSubmit, formState: { errors } } = useForm({resolver: yupResolver(schema)});
 
-  function handleRegister(form: FormDataProps) {
+  async function handleRegister(form: FormDataProps) {
 
     if(!transactionType) {
       return Alert.alert("Selecione o tipo da transação")
@@ -59,14 +60,39 @@ export function Register() {
       return Alert.alert("Selecione a categoria")
     }
 
-    const data = {
+    const newTransaction = {
       name: form.name,
       amount: form.amount,
       transactionType,
       category: category.key
     }
-    console.log(data)
+
+    try {
+      const collectionKey = "@gofinances:transactions";
+      const data = await AsyncStorage.getItem(collectionKey);
+      const currentData = data ? JSON.parse(data) : [];
+
+      const dataFormatted = [
+        ...currentData,
+        newTransaction
+      ];
+
+      await AsyncStorage.setItem(collectionKey, JSON.stringify(dataFormatted));
+
+    } catch (error) {
+      console.log(error);
+      Alert.alert('Não foi possível salvar');
+    }
+
   }
+
+  useEffect(() => {
+    (async() => {
+      const response = await AsyncStorage.getItem('@gofinances:transactions');
+      console.log(JSON.parse(response!))
+    })()
+
+  }, [])
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
