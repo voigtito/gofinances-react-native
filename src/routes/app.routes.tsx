@@ -13,7 +13,7 @@ import { RFValue } from 'react-native-responsive-fontsize';
 
 export function AppRoutes() {
 
-  const theme = useTheme();
+  const theme = useTheme(); 
 
   return (
     <Navigator
