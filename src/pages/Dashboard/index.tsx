@@ -6,6 +6,7 @@ import { HighlightCard } from '../../components/HIghlightCard';
 import { TransactionCard, TransactionCardProps } from '../../components/TransactionCard';
 import { Container, Header, Photo, UserInfo, User, UserGreatings, UserName, UserContainer, Icon, HighlightCards, Transactions, Title, TransactionList, LogoutButton, LoadContainer } from './styles';
 import { useTheme } from 'styled-components';
+import { useAuth } from '../../hooks/auth';
 
 export interface DataListProps extends TransactionCardProps {
   id: string;
@@ -32,8 +33,16 @@ export function Dashboard() {
   const [highlightData, setHighlightData] = useState<HighlightData>({} as HighlightData);
   const [isLoading, setIsLoading] = useState(true);
   const theme = useTheme();
+  const { signOut, user } = useAuth();
 
   function getLasTransactionDate(collection: DataListProps[], type: 'positive' | 'negative') {
+
+    const collectionFiltered = collection.filter(transaction => transaction.type === type);
+
+    if (collectionFiltered.length === 0) {
+      return false;
+    }
+
     const lastTransaction = new Date(Math.max.apply(Math, collection
       .filter(transaction => transaction.type === type)
       .map(transaction => new Date(transaction.date).getTime())))
@@ -79,7 +88,7 @@ export function Dashboard() {
     const total = entriesSum - expensive;
     const lastTransactionEntries = getLasTransactionDate(transactions, 'positive');
     const lastTransactionExpensives = getLasTransactionDate(transactions, 'negative');
-    const totalInterval = `01 a ${lastTransactionExpensives}`
+    const totalInterval = !lastTransactionExpensives ? "Não há transações :(" : `01 a ${lastTransactionExpensives}`
 
     setHighlightData({
       expensives: {
@@ -87,14 +96,14 @@ export function Dashboard() {
           style: 'currency',
           currency: 'BRL'
         }),
-        lastTransaction: `Última entrada dia ${lastTransactionEntries}`
+        lastTransaction: !lastTransactionEntries ? "Não há transações :(" : `Última entrada dia ${lastTransactionEntries}`
       },
       entries: {
         amount: entriesSum.toLocaleString('pt-BR', {
           style: 'currency',
           currency: 'BRL'
         }),
-        lastTransaction: `Última entrada dia ${lastTransactionExpensives}`
+        lastTransaction: !lastTransactionEntries ? "Não há transações :(" : `Última entrada dia ${lastTransactionExpensives}`
       },
       total: {
         amount: total.toLocaleString('pt-BR', {
@@ -121,13 +130,13 @@ export function Dashboard() {
       <Header>
         <UserContainer>
           <UserInfo>
-            <Photo source={{ uri: "https://avatars.githubusercontent.com/u/55980259?v=4" }} />
+            <Photo source={{ uri: user.picture }} />
             <User>
               <UserGreatings>Olá,</UserGreatings>
-              <UserName>Rodrigo</UserName>
+              <UserName>{user.name}</UserName>
             </User>
           </UserInfo>
-          <LogoutButton onPress={() => { }}>
+          <LogoutButton onPress={signOut}>
             <Icon name="power" />
           </LogoutButton>
         </UserContainer>

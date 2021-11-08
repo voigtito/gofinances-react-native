@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { RFValue } from 'react-native-responsive-fontsize';
 
 import LogoSvg from '../../assets/logo.svg';
@@ -17,16 +17,32 @@ import {
   FooterWrapper
 } from './styles'
 import { useAuth } from '../../hooks/auth';
+import { ActivityIndicator, Platform } from 'react-native';
+import { useTheme } from 'styled-components';
 
 export function SignIn() {
 
-  const { signInWithGoogle } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { signInWithGoogle, signInWithApple } = useAuth();
+  const { colors } = useTheme();
 
   async function handleSignInWithGoogle() {
     try {
+      setIsLoading(true);
       await signInWithGoogle();
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      setIsLoading(false);
+    }
+  }
+
+  async function handleSignInWithApple() {
+    try {
+      setIsLoading(true);
+      await signInWithApple();
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
     }
   }
 
@@ -34,7 +50,7 @@ export function SignIn() {
     <Container>
       <Header>
         <TitleWrapper>
-          <LogoSvg 
+          <LogoSvg
             width={RFValue(120)}
             height={RFValue(68)}
           />
@@ -45,10 +61,14 @@ export function SignIn() {
         </SignInTitle>
       </Header>
       <Footer>
-        <FooterWrapper>
-          <SignInSocialButton title="Entrar com Google" svg={GoogleSvg} onPress={handleSignInWithGoogle}></SignInSocialButton>
-          <SignInSocialButton title="Entrar com Apple" svg={AppleSvg}></SignInSocialButton>
-        </FooterWrapper>
+        {isLoading ?
+          <ActivityIndicator color={colors.shape} size="large" />
+          :
+          <FooterWrapper>
+            <SignInSocialButton title="Entrar com Google" svg={GoogleSvg} onPress={handleSignInWithGoogle}></SignInSocialButton>
+            {Platform.OS === "ios" && <SignInSocialButton title="Entrar com Apple" svg={AppleSvg} onPress={handleSignInWithApple}></SignInSocialButton>}
+          </FooterWrapper>
+        }
       </Footer>
     </Container>
   )
